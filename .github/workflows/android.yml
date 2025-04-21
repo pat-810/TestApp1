@@ -2,9 +2,11 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: 
+      - '**'  # 全てのブランチ
   pull_request:
-    branches: [ "main" ]
+    branches: 
+      - '**'  # 全てのブランチ
 
 jobs:
   build:
