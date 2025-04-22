@@ -1,0 +1,60 @@
+name: Android Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build Android App
+    runs-on: ubuntu-latest
+
+    steps:
+    # リポジトリをチェックアウト
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Javaのセットアップ
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17' # 必要なJavaバージョンを指定
+
+    # Android SDKのセットアップ
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 34 # 必要なAPIレベルを指定
+        
+      # Android SDKのライセンスに同意
+    - name: Accept Android SDK Licenses
+      run: yes | sdkmanager --licenses
+
+    # 最新のcmdline-toolsをインストール
+    - name: Install latest cmdline-tools
+      run: |
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+        unzip cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+        mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+        rm cmdline-tools.zip
+              
+    # Gradleキャッシュの有効化
+    - name: Cache Gradle
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    # アプリのビルド
+    - name: Build with Gradle
+      run: ./gradlew assembleDebug # 必要に応じてassembleReleaseなどに変更
+
